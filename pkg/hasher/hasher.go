@@ -1,6 +1,8 @@
+// Package hasher provides utilities for securely hashing and checking passwords.
 package hasher
 
 import (
+	// This package uses bcrypt for password hashing.
 	"golang.org/x/crypto/bcrypt"
 )
 
