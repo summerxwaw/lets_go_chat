@@ -9,7 +9,7 @@ type User struct {
 }
 
 type UserRepository interface {
-	FindByUsername()
+	FindByUsername(string)
 	Save(User)
 }
 
