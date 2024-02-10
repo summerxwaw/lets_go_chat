@@ -8,8 +8,8 @@ type User struct {
 	ID, Username, Password string
 }
 
-type userRepository interface {
-	FindByUsername(string)
+type UserRepository interface {
+	FindByUsername()
 	Save(User)
 }
 
@@ -19,7 +19,7 @@ type UserRepositoryInMemory struct {
 	Store UserMemory
 }
 
-func (usrRep *UserRepositoryInMemory) FindByUsername(username string) (*User, error) {
+func (usrRep UserRepositoryInMemory) FindByUsername(username string) (*User, error) {
 	for _, u := range usrRep.Store {
 		if u.Username == username {
 			return u, nil
@@ -29,8 +29,6 @@ func (usrRep *UserRepositoryInMemory) FindByUsername(username string) (*User, er
 	return nil, errors.New("user not found")
 }
 
-func (usrRep *UserRepositoryInMemory) Save(user *User) error {
+func (usrRep UserRepositoryInMemory) Save(user *User) {
 	usrRep.Store[user.ID] = user
-
-	return nil
 }

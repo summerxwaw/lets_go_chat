@@ -18,12 +18,13 @@ type MessageRepositoryInMemory struct {
 	Store MessageMemory
 }
 
-func (msgRep *MessageRepositoryInMemory) FindAll() (map[string]*Message, error) {
-	return msgRep.Store, errors.New("messages not found :(")
+func (msgRep MessageRepositoryInMemory) FindAll() (MessageMemory, error) {
+	if msgRep.Store == nil {
+		return nil, errors.New("messages not found :(")
+	}
+	return msgRep.Store, nil
 }
 
-func (msgRep *MessageRepositoryInMemory) Save(msg *Message) error {
+func (msgRep MessageRepositoryInMemory) Save(msg *Message) {
 	msgRep.Store[msg.ID] = msg
-
-	return nil
 }

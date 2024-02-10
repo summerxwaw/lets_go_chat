@@ -13,11 +13,7 @@ func main() {
 	msgRepo := message.MessageRepositoryInMemory{Store: message.MessageMemory{}}
 
 	user := user.User{ID: "1", Username: "GoLEARNING", Password: "password"}
-	err := userRepo.Save(&user)
-
-	if err != nil {
-		fmt.Println(err)
-	}
+	userRepo.Save(&user)
 
 	foundUser, err := userRepo.FindByUsername("GoLEARNING")
 
@@ -28,7 +24,7 @@ func main() {
 	fmt.Println(foundUser)
 
 	message := message.Message{ID: "1", Text: "Hello, GO"}
-	err = msgRepo.Save(&message)
+	msgRepo.Save(&message)
 
 	if err != nil {
 		fmt.Println(err)
