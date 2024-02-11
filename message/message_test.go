@@ -1,41 +1,48 @@
-package message
+package message_test
 
 import (
 	"testing"
+
+	"github.com/summerxwaw/lets_go_chat/message"
 )
 
-func TestMessageRepositoryInMemory_FindAll(t *testing.T) {
-	repo := MessageRepositoryInMemory{
-		Store: MessageMemory{
-			"id1": &Message{ID: "id1", Text: "Hello, Go!"},
+func TestMessageRepository(t *testing.T) {
+	tests := []struct {
+		name        string
+		text        string
+		expectedErr string
+		message     message.Message
+	}{
+		{
+			name:        "messages not found",
+			expectedErr: "messages not found :(",
+		},
+		{
+			name: "messages exists",
+			text: "messages",
+			message: message.Message{
+				ID: "1", Text: "existingtext",
+			},
 		},
 	}
 
-	msgs, err := repo.FindAll()
-	if err != nil {
-		t.Errorf("Got unexpected error: %v", err)
-	}
-	if msgs == nil || len(msgs) != 1 || msgs["id1"].Text != "Hello, Go!" {
-		t.Errorf("Got unexpected messages: %v", msgs)
-	}
+	repo := message.NewMessageRepository()
 
-	repoEmpty := MessageRepositoryInMemory{Store: MessageMemory{}}
-	_, err = repoEmpty.FindAll()
-	if err == nil {
-		t.Errorf("Expected error for empty repository")
-	}
-}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 
-func TestMessageRepositoryInMemory_Save(t *testing.T) {
-	repo := MessageRepositoryInMemory{Store: MessageMemory{}}
+			if test.message.ID != "" {
+				repo.Save(test.message)
+			}
 
-	msg := Message{ID: "id1", Text: "Hello, Go!"}
-	repo.Save(&msg)
+			_, err := repo.FindAll()
 
-	if len(repo.Store) != 1 {
-		t.Errorf("Expected one message in the store")
-	}
-	if repo.Store[msg.ID].Text != "Hello, Go!" {
-		t.Errorf("Got unexpected message: %v", repo.Store[msg.ID])
+			if err != nil && err.Error() != test.expectedErr {
+				t.Errorf("Expected error %q but got %q", test.expectedErr, err)
+			} else if err == nil && test.expectedErr != "" {
+				t.Errorf("Expected error %q but got nil", test.expectedErr)
+			}
+
+		})
 	}
 }

@@ -38,11 +38,11 @@ For using Meessage and User repository we must follow this example:
 	"github.com/summerxwaw/lets_go_chat/user"
 )
 
-	userRepo := user.UserRepositoryInMemory{Store: user.UserMemory{}}
-	msgRepo := message.MessageRepositoryInMemory{Store: message.MessageMemory{}}
+	userRepo := user.NewUserRepository()
+	msgRepo := message.NewMessageRepository()
 
 	user := user.User{ID: "1", Username: "GoLEARNING", Password: "password"}
-	userRepo.Save(&user)
+	userRepo.Save(user)
 
 	foundUser, err := userRepo.FindByUsername("GoLEARNING")
 
@@ -53,7 +53,7 @@ For using Meessage and User repository we must follow this example:
 	fmt.Println(foundUser)
 
 	message := message.Message{ID: "1", Text: "Hello, GO"}
-	msgRepo.Save(&message)
+	msgRepo.Save(message)
 
 	if err != nil {
 		fmt.Println(err)
@@ -66,6 +66,7 @@ For using Meessage and User repository we must follow this example:
 	}
 
 	fmt.Println(foundMsgs)
+
    ```
 ## License
 This project is licensed under the Unlicense.

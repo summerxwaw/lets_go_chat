@@ -2,33 +2,48 @@ package user
 
 import (
 	"errors"
+	"sync"
 )
 
 type User struct {
 	ID, Username, Password string
 }
 
-type UserRepository interface {
+type Repository interface {
 	FindByUsername(string)
 	Save(User)
 }
 
-type UserMemory map[string]*User
+type Memory map[string]User
 
-type UserRepositoryInMemory struct {
-	Store UserMemory
+type UserRepository struct {
+	store Memory
+	mutex *sync.RWMutex
 }
 
-func (usrRep UserRepositoryInMemory) FindByUsername(username string) (*User, error) {
-	for _, u := range usrRep.Store {
+func NewUserRepository() UserRepository {
+	return UserRepository{
+		store: make(Memory),
+		mutex: &sync.RWMutex{},
+	}
+}
+
+func (u UserRepository) FindByUsername(username string) (User, error) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	for _, u := range u.store {
 		if u.Username == username {
 			return u, nil
 		}
 	}
 
-	return nil, errors.New("user not found")
+	return User{}, errors.New("user not found")
 }
 
-func (usrRep UserRepositoryInMemory) Save(user *User) {
-	usrRep.Store[user.ID] = user
+func (u UserRepository) Save(user User) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.store[user.ID] = user
 }

@@ -2,29 +2,45 @@ package message
 
 import (
 	"errors"
+	"sync"
 )
 
 type Message struct {
 	ID, Text string
 }
-type MessageRepository interface {
+type Repository interface {
 	FindAll()
 	Save(Message)
 }
 
-type MessageMemory map[string]*Message
+type Memory map[string]Message
 
-type MessageRepositoryInMemory struct {
-	Store MessageMemory
+type MessageRepository struct {
+	store Memory
+	mutex *sync.RWMutex
 }
 
-func (msgRep MessageRepositoryInMemory) FindAll() (MessageMemory, error) {
-	if msgRep.Store == nil {
-		return nil, errors.New("messages not found :(")
+func NewMessageRepository() MessageRepository {
+	return MessageRepository{
+		store: make(Memory),
+		mutex: &sync.RWMutex{},
 	}
-	return msgRep.Store, nil
 }
 
-func (msgRep MessageRepositoryInMemory) Save(msg *Message) {
-	msgRep.Store[msg.ID] = msg
+func (m MessageRepository) FindAll() (Memory, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if m.store == nil || len(m.store) == 0 {
+		return Memory{}, errors.New("messages not found :(")
+	}
+
+	return m.store, nil
+}
+
+func (m MessageRepository) Save(msg Message) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.store[msg.ID] = msg
 }

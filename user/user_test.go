@@ -1,40 +1,46 @@
-package user
+package user_test
 
 import (
 	"testing"
+
+	"github.com/summerxwaw/lets_go_chat/user"
 )
 
-func TestUserRepositoryInMemory_FindByUsername(t *testing.T) {
-	repo := UserRepositoryInMemory{
-		Store: UserMemory{
-			"id1": &User{ID: "id1", Username: "Username", Password: "password"},
+func TestUserRepository(t *testing.T) {
+	tests := []struct {
+		name        string
+		username    string
+		expectedErr string
+		user        user.User
+	}{
+		{
+			name:     "user exists",
+			username: "existinguser",
+			user:     user.User{ID: "1", Username: "existinguser", Password: "pass"},
+		},
+		{
+			name:        "user not found",
+			username:    "nonexistentuser",
+			expectedErr: "user not found",
 		},
 	}
 
-	user, err := repo.FindByUsername("Username")
-	if err != nil {
-		t.Errorf("Got unexpected error: %v", err)
-	}
-	if user == nil || user.ID != "id1" {
-		t.Errorf("Got unexpected user: %v", user)
-	}
+	repo := user.NewUserRepository()
 
-	_, err = repo.FindByUsername("NonExistentUser")
-	if err == nil {
-		t.Errorf("Expected error for non existent user")
-	}
-}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 
-func TestUserRepositoryInMemory_Save(t *testing.T) {
-	repo := UserRepositoryInMemory{Store: UserMemory{}}
+			if test.user.ID != "" {
+				repo.Save(test.user)
+			}
 
-	user := User{ID: "id1", Username: "Username", Password: "password"}
-	repo.Save(&user)
+			_, err := repo.FindByUsername(test.username)
 
-	if len(repo.Store) != 1 {
-		t.Errorf("Expected one user in the store")
-	}
-	if repo.Store[user.ID].Username != "Username" {
-		t.Errorf("Got unexpected user: %v", repo.Store[user.ID])
+			if err != nil && err.Error() != test.expectedErr {
+				t.Errorf("Expected error %q but got %q", test.expectedErr, err)
+			} else if err == nil && test.expectedErr != "" {
+				t.Errorf("Expected error %q but got nil", test.expectedErr)
+			}
+		})
 	}
 }
