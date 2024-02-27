@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
+	middleware "github.com/summerxwaw/lets_go_chat/middlewares"
 	"github.com/summerxwaw/lets_go_chat/user"
 )
 
@@ -24,9 +26,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/v1/user", user.HandleUserCreate)
-	http.HandleFunc("/v1/user/login", user.HandleUserLogin)
+	mux := http.NewServeMux()
 
-	fmt.Println("Server is listening on localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	mux.Handle("/v1/user", middleware.LoggingMiddleware(http.HandlerFunc(user.HandleUserCreate)))
+	mux.Handle("/v1/user/login", middleware.LoggingMiddleware(http.HandlerFunc(user.HandleUserLogin)))
+
+	slog.Info("Server is listening on localhost:8080")
+	err := http.ListenAndServe("localhost:8080", mux)
+
+	slog.Error(fmt.Sprint(err))
 }
