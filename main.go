@@ -27,12 +27,30 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	mux := http.NewServeMux()
-
-	mux.Handle("/v1/user", middleware.LoggingMiddleware(http.HandlerFunc(user.HandleUserCreate)))
-	mux.Handle("/v1/user/login", middleware.LoggingMiddleware(http.HandlerFunc(user.HandleUserLogin)))
+	mux.Handle(
+		"/v1/user",
+		middleware.RecoveryMiddleware(
+			middleware.LoggingMiddleware(
+				middleware.RecoveryMiddleware(
+					http.HandlerFunc(user.HandleUserCreate),
+				),
+			),
+		),
+	)
+	mux.Handle(
+		"/v1/user/login",
+		middleware.RecoveryMiddleware(
+			middleware.LoggingMiddleware(
+				middleware.RecoveryMiddleware(
+					http.HandlerFunc(user.HandleUserLogin),
+				),
+			),
+		),
+	)
 
 	slog.Info("Server is listening on localhost:8080")
-	err := http.ListenAndServe("localhost:8080", mux)
+
+	err := http.ListenAndServe("0.0.0.0:8080", mux)
 
 	slog.Error(fmt.Sprint(err))
 }

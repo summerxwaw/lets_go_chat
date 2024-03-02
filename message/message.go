@@ -1,8 +1,9 @@
 package message
 
 import (
-	"errors"
-	"sync"
+	"context"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Message struct {
@@ -13,34 +14,19 @@ type Repository interface {
 	Save(Message)
 }
 
-type Memory map[string]Message
+func (m *MessageRepository) Find(id string) (Message, error) {
+	filter := bson.M{"id": id}
+	var message Message
 
-type MessageRepository struct {
-	store Memory
-	mutex *sync.RWMutex
-}
-
-func NewMessageRepository() MessageRepository {
-	return MessageRepository{
-		store: make(Memory),
-		mutex: &sync.RWMutex{},
-	}
-}
-
-func (m MessageRepository) FindAll() (Memory, error) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	if m.store == nil || len(m.store) == 0 {
-		return Memory{}, errors.New("messages not found :(")
+	err := m.collection.FindOne(context.Background(), filter).Decode(&message)
+	if err != nil {
+		return Message{}, err
 	}
 
-	return m.store, nil
+	return message, nil
 }
 
-func (m MessageRepository) Save(msg Message) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	m.store[msg.ID] = msg
+func (m *MessageRepository) Save(message Message) error {
+	_, err := m.collection.InsertOne(context.Background(), message)
+	return err
 }

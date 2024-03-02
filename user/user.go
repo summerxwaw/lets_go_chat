@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"sync"
 )
 
 type User struct {
@@ -14,36 +13,35 @@ type Repository interface {
 	Save(User)
 }
 
-type Memory map[string]User
+func (u UserRepository) FindByUsername(username string) (*User, error) {
+	user := &User{}
 
-type UserRepository struct {
-	store Memory
-	mutex *sync.RWMutex
-}
+	result := u.db.Where("username = ?", username).First(user)
 
-func NewUserRepository() UserRepository {
-	return UserRepository{
-		store: make(Memory),
-		mutex: &sync.RWMutex{},
-	}
-}
-
-func (u UserRepository) FindByUsername(username string) (User, error) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-
-	for _, u := range u.store {
-		if u.Username == username {
-			return u, nil
-		}
+	if result.Error != nil {
+		return nil, errors.New("user not found")
 	}
 
-	return User{}, errors.New("user not found")
+	return user, nil
 }
 
-func (u UserRepository) Save(user User) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+func (u UserRepository) Save(user User) error {
+	if u.db == nil {
+		return errors.New("database not initialized")
+	}
 
-	u.store[user.ID] = user
+	if user.Username == "" {
+		return errors.New("User name cannot be empty")
+	}
+
+	result := u.db.Create(&UserDB{
+		ID:       user.ID,
+		Username: user.Username,
+	})
+
+	if result.Error != nil {
+		return errors.New("error while saving user to db")
+	}
+
+	return nil
 }

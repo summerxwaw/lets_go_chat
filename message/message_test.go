@@ -35,7 +35,7 @@ func TestMessageRepository(t *testing.T) {
 				repo.Save(test.message)
 			}
 
-			_, err := repo.FindAll()
+			_, err := repo.Find(test.message.ID)
 
 			if err != nil && err.Error() != test.expectedErr {
 				t.Errorf("Expected error %q but got %q", test.expectedErr, err)

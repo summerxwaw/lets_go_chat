@@ -4,3 +4,44 @@ services:
     build: .
     ports:
       - "8080:8080"
+    environment:
+      - MONGO_USER=root
+      - MONGO_PASSWORD=123
+    env_file:
+      - common.env
+    depends_on:
+      users-db:
+        condition: service_healthy
+        restart: true
+      messages-db:
+        condition: service_started
+  users-db:
+    image: mysql:latest
+    container_name: db-mysql
+    env_file:
+      - common.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: none
+  messages-db:
+    image: mongo:7
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    logging:
+      driver: none
+
+volumes:
+  mysql-data:
+  mongo-data:
