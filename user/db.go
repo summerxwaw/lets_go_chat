@@ -23,7 +23,9 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository() *UserRepository {
+var UsersRepository, RepositoryErr = NewUserRepository()
+
+func NewUserRepository() (*UserRepository, error) {
 	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_ROOT_PASSWORD")
 	hostname := os.Getenv("MYSQL_HOST")
@@ -37,6 +39,8 @@ func NewUserRepository() *UserRepository {
 	if err != nil {
 		fmt.Println("Failed to connect to database")
 		fmt.Println(err)
+
+		return nil, err
 	} else {
 		fmt.Println("Connected to database")
 	}
@@ -45,5 +49,5 @@ func NewUserRepository() *UserRepository {
 		log.Fatalf("Failed to migrate UserDB schema: %v\n", err)
 	}
 
-	return &UserRepository{db: db}
+	return &UserRepository{db: db}, nil
 }

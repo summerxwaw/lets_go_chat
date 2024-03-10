@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 type createUserRequest struct {
@@ -25,9 +27,11 @@ type loginUserResponse struct {
 	URL string `json:"url"`
 }
 
-var usersRepository = NewUserRepository()
-
 func HandleUserCreate(w http.ResponseWriter, r *http.Request) {
+	if RepositoryErr != nil {
+		http.Error(w, "Bad connection to SQL", http.StatusMethodNotAllowed)
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method ", http.StatusMethodNotAllowed)
 		return
@@ -43,7 +47,7 @@ func HandleUserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := createUserResponse{
-		ID:       "some-unique-uuid11111",
+		ID:       uuid.New().String(),
 		UserName: req.UserName,
 	}
 	userToSave := User{
@@ -51,7 +55,7 @@ func HandleUserCreate(w http.ResponseWriter, r *http.Request) {
 		Username: resp.UserName,
 	}
 
-	err = usersRepository.Save(userToSave)
+	err = UsersRepository.Save(userToSave)
 
 	if err != nil {
 		fmt.Println(err)
@@ -68,6 +72,9 @@ func HandleUserCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleUserLogin(w http.ResponseWriter, r *http.Request) {
+	if RepositoryErr != nil {
+		http.Error(w, "Bad connection to SQL", http.StatusMethodNotAllowed)
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -81,7 +88,7 @@ func HandleUserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := usersRepository.FindByUsername(req.UserName)
+	user, err := UsersRepository.FindByUsername(req.UserName)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusBadRequest)
