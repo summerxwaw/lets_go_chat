@@ -25,7 +25,11 @@ func TestUserRepository(t *testing.T) {
 		},
 	}
 
-	repo := user.NewUserRepository()
+	repo, repoErr := user.NewUserRepository()
+
+	if repoErr != nil {
+		t.Errorf("Repo error %q", repoErr)
+	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
